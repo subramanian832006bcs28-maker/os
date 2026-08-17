@@ -1,0 +1,362 @@
+[24bcs049@mepcolinux ex4]$cat round.c
+#include <stdio.h>
+
+struct Process
+{
+    int pid;
+    int bt;
+    int wt;
+    int tat;
+    int priority;
+};
+
+void fcfs(struct Process p[], int n)
+{
+    int i;
+    float avgwt=0,avgtat=0;
+
+    p[0].wt=0;
+
+    for(i=1;i<n;i++)
+        p[i].wt=p[i-1].wt+p[i-1].bt;
+
+    printf("\nGantt Chart:\n|");
+    for(i=0;i<n;i++)
+        printf(" P%d |",p[i].pid);
+
+    printf("\n\nPID\tBT\tWT\tTAT\n");
+
+    for(i=0;i<n;i++)
+    {
+        p[i].tat=p[i].wt+p[i].bt;
+        avgwt+=p[i].wt;
+        avgtat+=p[i].tat;
+
+        printf("P%d\t%d\t%d\t%d\n",p[i].pid,p[i].bt,p[i].wt,p[i].tat);
+    }
+
+    printf("\nAverage Waiting Time = %.2f",avgwt/n);
+    printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+}
+
+void sjf(struct Process p[], int n)
+{
+    int i,j;
+    struct Process temp;
+    float avgwt=0,avgtat=0;
+
+    for(i=0;i<n-1;i++)
+    {
+        for(j=i+1;j<n;j++)
+        {
+            if(p[i].bt>p[j].bt)
+            {
+                temp=p[i];
+                p[i]=p[j];
+                p[j]=temp;
+            }
+        }
+    }
+
+    p[0].wt=0;
+
+    for(i=1;i<n;i++)
+        p[i].wt=p[i-1].wt+p[i-1].bt;
+
+    printf("\nGantt Chart:\n|");
+    for(i=0;i<n;i++)
+        printf(" P%d |",p[i].pid);
+
+    printf("\n\nPID\tBT\tWT\tTAT\n");
+
+    for(i=0;i<n;i++)
+    {
+        p[i].tat=p[i].wt+p[i].bt;
+        avgwt+=p[i].wt;
+        avgtat+=p[i].tat;
+
+        printf("P%d\t%d\t%d\t%d\n",p[i].pid,p[i].bt,p[i].wt,p[i].tat);
+    }
+
+    printf("\nAverage Waiting Time = %.2f",avgwt/n);
+    printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+}
+
+void priorityScheduling(struct Process p[], int n)
+{
+    int i,j;
+    struct Process temp;
+    float avgwt=0,avgtat=0;
+
+    for(i=0;i<n-1;i++)
+    {
+        for(j=i+1;j<n;j++)
+        {
+            if(p[i].priority>p[j].priority)
+            {
+                temp=p[i];
+                p[i]=p[j];
+                p[j]=temp;
+            }
+        }
+    }
+
+    p[0].wt=0;
+
+    for(i=1;i<n;i++)
+        p[i].wt=p[i-1].wt+p[i-1].bt;
+
+    printf("\nGantt Chart:\n|");
+    for(i=0;i<n;i++)
+        printf(" P%d |",p[i].pid);
+
+    printf("\n\nPID\tBT\tPriority\tWT\tTAT\n");
+
+    for(i=0;i<n;i++)
+    {
+        p[i].tat=p[i].wt+p[i].bt;
+        avgwt+=p[i].wt;
+        avgtat+=p[i].tat;
+
+        printf("P%d\t%d\t%d\t\t%d\t%d\n",
+        p[i].pid,p[i].bt,p[i].priority,p[i].wt,p[i].tat);
+    }
+
+    printf("\nAverage Waiting Time = %.2f",avgwt/n);
+    printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+}
+
+void roundRobin(struct Process p[], int n,int tq)
+{
+    int rem[20];
+    int wt[20]={0};
+    int tat[20];
+    int time=0,i;
+    float avgwt=0,avgtat=0;
+    int done;
+
+    for(i=0;i<n;i++)
+        rem[i]=p[i].bt;
+
+    printf("\nGantt Chart:\n|");
+
+    do
+    {
+        done=1;
+
+        for(i=0;i<n;i++)
+        {
+            if(rem[i]>0)
+            {
+                done=0;
+
+                if(rem[i]>tq)
+                {
+                    printf(" P%d |",p[i].pid);
+                    time+=tq;
+                    rem[i]-=tq;
+                }
+                else
+                {
+                    printf(" P%d |",p[i].pid);
+                    time+=rem[i];
+                    wt[i]=time-p[i].bt;
+                    rem[i]=0;
+                }
+            }
+        }
+
+    }while(!done);
+
+    printf("\n\nPID\tBT\tWT\tTAT\n");
+
+    for(i=0;i<n;i++)
+    {
+        tat[i]=wt[i]+p[i].bt;
+        avgwt+=wt[i];
+        avgtat+=tat[i];
+
+        printf("P%d\t%d\t%d\t%d\n",p[i].pid,p[i].bt,wt[i],tat[i]);
+    }
+
+    printf("\nAverage Waiting Time = %.2f",avgwt/n);
+    printf("\nAverage Turnaround Time = %.2f\n",avgtat/n);
+}
+
+int main()
+{
+    struct Process p[20],temp[20];
+    int n,i,ch,tq;
+
+    printf("Enter number of processes: ");
+    scanf("%d",&n);
+
+    for(i=0;i<n;i++)
+    {
+        p[i].pid=i+1;
+
+        printf("\nProcess %d\n",i+1);
+
+        printf("Burst Time: ");
+        scanf("%d",&p[i].bt);
+
+        printf("Priority: ");
+        scanf("%d",&p[i].priority);
+    }
+
+    while(1)
+    {
+        printf("\nCPU Scheduling Algorithms");
+        printf("\n1.FCFS");
+        printf("\n2.SJF");
+        printf("\n3.Priority Scheduling");
+        printf("\n4.Round Robin");
+        printf("\n5.Exit");
+
+        printf("\nEnter your choice: ");
+        scanf("%d",&ch);
+
+        for(i=0;i<n;i++)
+            temp[i]=p[i];
+
+        switch(ch)
+        {
+            case 1:
+                fcfs(temp,n);
+                break;
+
+            case 2:
+                sjf(temp,n);
+                break;
+
+            case 3:
+                priorityScheduling(temp,n);
+                break;
+
+            case 4:
+                printf("Enter Time Quantum: ");
+                scanf("%d",&tq);
+                roundRobin(temp,n,tq);
+                break;
+
+            case 5:
+                return 0;
+
+            default:
+                printf("Invalid Choice");
+        }
+    }
+}
+[24bcs049@mepcolinux ex4]$./a.out
+Enter number of processes: 4
+
+Process 1
+Burst Time: 5
+Priority: 2
+
+Process 2
+Burst Time: 3
+Priority: 1
+
+Process 3
+Burst Time: 8
+Priority: 4
+
+Process 4
+Burst Time: 6
+Priority: 3
+
+CPU Scheduling Algorithms
+1.FCFS
+2.SJF
+3.Priority Scheduling
+4.Round Robin
+5.Exit
+Enter your choice: 1
+
+Gantt Chart:
+| P1 | P2 | P3 | P4 |
+
+PID	BT	WT	TAT
+P1	5	0	5
+P2	3	5	8
+P3	8	8	16
+P4	6	16	22
+
+Average Waiting Time = 7.25
+Average Turnaround Time = 12.75
+
+CPU Scheduling Algorithms
+1.FCFS
+2.SJF
+3.Priority Scheduling
+4.Round Robin
+5.Exit
+Enter your choice: 2
+
+Gantt Chart:
+| P2 | P1 | P4 | P3 |
+
+PID	BT	WT	TAT
+P2	3	0	3
+P1	5	3	8
+P4	6	8	14
+P3	8	14	22
+
+Average Waiting Time = 6.25
+Average Turnaround Time = 11.75
+
+CPU Scheduling Algorithms
+1.FCFS
+2.SJF
+3.Priority Scheduling
+4.Round Robin
+5.Exit
+Enter your choice: 3
+
+Gantt Chart:
+| P2 | P1 | P4 | P3 |
+
+PID	BT	Priority	WT	TAT
+P2	3	1		0	3
+P1	5	2		3	8
+P4	6	3		8	14
+P3	8	4		14	22
+
+Average Waiting Time = 6.25
+Average Turnaround Time = 11.75
+
+CPU Scheduling Algorithms
+1.FCFS
+2.SJF
+3.Priority Scheduling
+4.Round Robin
+5.Exit
+Enter your choice: 4
+Enter Time Quantum: 2
+
+Gantt Chart:
+| P1 | P2 | P3 | P4 | P1 | P2 | P3 | P4 | P1 | P3 | P4 | P3 |
+
+PID	BT	WT	TAT
+P1	5	11	16
+P2	3	8	11
+P3	8	14	22
+P4	6	14	20
+
+Average Waiting Time = 11.75
+Average Turnaround Time = 17.25
+
+CPU Scheduling Algorithms
+1.FCFS
+2.SJF
+3.Priority Scheduling
+4.Round Robin
+5.Exit
+Enter your choice: 5
+[24bcs049@mepcolinux ex4]$exit
+exit
+
+Script done on Monday 27 July 2026 12:13:15 PM IST
+[24bcs049@mepcolinux ex4]$
+
